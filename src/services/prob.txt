@@ -1,0 +1,22 @@
+Here’s what the logs actually show and where the error is coming from, without changing any code yet.
+
+**What the logs show**
+- `2026-03-16T09:42:40.833Z` the STK push initiation to `https://apps.kenic.or.ke/payapi/stkpush` succeeds with `ResponseCode: 0` and “Success. Request accepted for processing.” That means the payment was started correctly.
+- `2026-03-16T09:42:42.114Z` the first status poll hits a `429 Spike arrest violation` (rate limit 5 requests/minute). That’s a gateway limit, not a frontend error.
+- `2026-03-16T09:42:48.811Z` the next status poll returns `ResultCode: 4999` with `ResultDesc: "The transaction is still under processing"`.
+
+**Why the UI shows an error**
+In both booking flows, any non‑zero `ResultCode` is treated as a final failure and we immediately stop polling and clear the pending checkout. That means a *pending* status (`4999`) becomes a visible error and we stop listening for the eventual success callback.
+
+- `app/bookDomain.tsx` treats any non‑zero `ResultCode` as failure and clears `pendingCheckoutRef` before it can receive a later success update. See `processPaymentOutcome` at `app/bookDomain.tsx:460`.  
+- `app/deletedflow.tsx` has the same logic. See `app/deletedflow.tsx:376`.  
+- Polling runs every 5 seconds (`MPESA_STATUS_POLL_INTERVAL_MS = 5000`), which is **12/minute**, but the gateway rate limit is **5/minute**, so 429s are expected. See `services/mpesaCheckoutClient.ts:7`.
+
+**Conclusion (front‑end vs back‑end)**
+- The “transaction still under processing” message is **coming from the backend** `payment-status` endpoint.
+- The **frontend is treating that “pending” response as a failure**, stopping the poll and discarding later success updates. That’s why you see an error even though the STK push arrives and the transaction can still succeed.
+
+**If you want to proceed to backend next**
+The main backend check is whether a final success callback is sent after `4999`, and whether your WS callback channel is working for that `checkoutId`. If you can share the backend logs for the same `CheckoutRequestID` around `2026-03-16 09:42:40Z–09:45:00Z`, we can confirm whether the backend finishes later.
+
+If you want me to keep digging on the frontend side (still no code changes), I can trace exactly where the error is surfaced in the UI and how it propagates to the user.

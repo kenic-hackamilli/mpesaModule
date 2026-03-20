@@ -1,0 +1,62 @@
+curl -X POST http://localhost:5040/api/stkpush \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: test-0743444178-001" \
+  -d '{
+    "phoneNumber": "254743444178",
+    "amount": 1,
+    "accountReference": "123456",
+    "transactionDesc": "Test payment"
+  }'
+
+
+
+
+curl -X POST http://localhost:5040/api/stkpush \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: test-0743444178-007" \
+  -d '{
+    "phoneNumber": "254743444178",
+    "amount": 10,
+    "accountReference": "123456",
+    "transactionDesc": "Test payment"
+  }'
+
+
+
+
+pm2 start dist/index.js --name mpesa-payments
+
+sudo nginx -t
+sudo systemctl reload nginx
+
+
+STK_API_URL=https://apps.kenic.or.ke/payapi/stkpush
+WS_URL=wss://apps.kenic.or.ke/ws
+KENIC_WHOIS_API_URL=https://apps.kenic.or.ke/whois
+
+
+curl -X POST http://localhost:5040/payapi/stkpush \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: test-0743444178-005" \
+  -d '{
+    "phoneNumber": "254743444178",
+    "amount": 1,
+    "accountReference": "123456",
+    "transactionDesc": "Test payment"
+  }'
+
+
+curl -X POST http://localhost:5040/payapi/stkpush \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: test-0743444178-006" \
+  -d '{
+    "phoneNumber": "254743444178",
+    "amount": 1,
+    "accountReference": "123456",
+    "transactionDesc": "Test payment"
+  }'
+
+
+pm2 logs 9 --lines 200
+
+cp paymentController.ts paymentController.ts.old && rm paymentController.ts && nano paymentController.ts
