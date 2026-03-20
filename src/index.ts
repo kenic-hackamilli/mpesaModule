@@ -1,4 +1,5 @@
 import Fastify from "fastify";
+import type { FastifyError, FastifyReply, FastifyRequest } from "fastify";
 import { logger } from "./config/logger.js";
 import { registerSecurity } from "./middleware/security.js";
 import { registerRateLimit } from "./middleware/rateLimit.js";
@@ -19,7 +20,7 @@ await registerHealthRoutes(app);
 await registerPaymentRoutes(app);
 await registerCallbackRoutes(app, hub);
 
-app.setErrorHandler((error, _req, reply) => {
+app.setErrorHandler((error: FastifyError, _req: FastifyRequest, reply: FastifyReply) => {
   app.log.error({ err: error }, "Unhandled error");
   const status = (error as any).statusCode ?? 500;
   reply.status(status).send({ error: status >= 500 ? "Internal Server Error" : error.message });

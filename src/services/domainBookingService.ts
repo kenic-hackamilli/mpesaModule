@@ -254,7 +254,7 @@ export const finalizeDomainBookingForCheckout = async (checkoutId: string) => {
 
     const { data: existingByReceipt, error: existingByReceiptError } = await supabase
       .from("domain_bookings")
-      .select("*")
+      .select("id")
       .eq("mpesa_transaction_id", mpesaReceipt)
       .maybeSingle();
 
@@ -341,7 +341,7 @@ export const finalizeDomainBookingForCheckout = async (checkoutId: string) => {
         mpesa_transaction_id: mpesaReceipt,
         payment_status: "paid",
       })
-      .select()
+      .select("id")
       .single();
 
     if (insertError) {

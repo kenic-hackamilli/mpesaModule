@@ -13,7 +13,7 @@ curl -X POST http://localhost:5040/api/stkpush \
 
 curl -X POST http://localhost:5040/api/stkpush \
   -H "Content-Type: application/json" \
-  -H "Idempotency-Key: test-0743444178-007" \
+  -H "Idempotency-Key: test-0743444178-100" \
   -d '{
     "phoneNumber": "254743444178",
     "amount": 10,
